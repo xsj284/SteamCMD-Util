@@ -1,3 +1,11 @@
+# 处理命令行参数
+$DebugMode = $false
+foreach ($arg in $args) {
+    switch ($arg) {
+        "-debug" { $DebugMode = $true }
+    }
+}
+
 # 读取配置文件
 $configPath = Join-Path $PSScriptRoot "server_info.json"
 if (-not (Test-Path $configPath)) {
@@ -283,35 +291,57 @@ function Update-Server {
         Write-Host "匿名登录: $($serverConfig.Anonymous)" -ForegroundColor White
         Write-Host "=============================" -ForegroundColor Cyan
 
-        # 修改 AppID
+        # 修改服务器名称
+        $newServerName = Read-Host "请输入新的服务器名称 (留空保持不变)"
+        if (-not [string]::IsNullOrWhiteSpace($newServerName)) {
+            # 检查新名称是否已存在
+            if ($newServerName -ne $serverName -and $config.ServerList.PSObject.Properties.Name -contains $newServerName) {
+                Write-Host "错误: 服务器名称 '$newServerName' 已存在!" -ForegroundColor Red
+                Read-Host "按任意键返回主菜单"
+                Show-MainMenu
+                return
+            }
+        }
+
+        # 修改其他配置
         $newAppId = Read-Host "请输入新的 Steam AppID (留空保持不变)"
-        if (-not [string]::IsNullOrWhiteSpace($newAppId)) {
-            $serverConfig.AppId = $newAppId
-        }
-
-        # 修改描述
         $newDescription = Read-Host "请输入新的服务器描述 (留空保持不变)"
-        if (-not [string]::IsNullOrWhiteSpace($newDescription)) {
-            $serverConfig.Description = $newDescription
-        }
-
-        # 修改安装目录
         $newInstallDir = Read-Host "请输入新的安装目录 (留空保持不变)"
-        if (-not [string]::IsNullOrWhiteSpace($newInstallDir)) {
-            $serverConfig.ForceInstallDir = $newInstallDir
+        $changeLoginMethod = Read-Host "是否修改登录方式? (Y/N)"
+
+        # 创建新的配置对象
+        $updatedConfig = @{
+            AppId           = if (-not [string]::IsNullOrWhiteSpace($newAppId)) { $newAppId } else { $serverConfig.AppId }
+            Description     = if (-not [string]::IsNullOrWhiteSpace($newDescription)) { $newDescription } else { $serverConfig.Description }
+            ForceInstallDir = if (-not [string]::IsNullOrWhiteSpace($newInstallDir)) { $newInstallDir } else { $serverConfig.ForceInstallDir }
+            Anonymous       = $serverConfig.Anonymous
         }
 
-        # 修改登录方式
-        $changeLoginMethod = Read-Host "是否修改登录方式? (Y/N)"
         if ($changeLoginMethod -eq "Y" -or $changeLoginMethod -eq "y") {
             $anonymousChoice = Read-Host "是否使用匿名登录? (Y/N)"
-            $serverConfig.Anonymous = ($anonymousChoice -eq "Y" -or $anonymousChoice -eq "y")
+            $updatedConfig.Anonymous = ($anonymousChoice -eq "Y" -or $anonymousChoice -eq "y")
+        }
+
+        # 更新配置
+        if (-not [string]::IsNullOrWhiteSpace($newServerName) -and $newServerName -ne $serverName) {
+            # 如果服务器名称改变，删除旧配置并添加新配置
+            $newServerList = New-Object PSObject
+            foreach ($server in $config.ServerList.PSObject.Properties) {
+                if ($server.Name -ne $serverName) {
+                    $newServerList | Add-Member -MemberType NoteProperty -Name $server.Name -Value $server.Value
+                }
+            }
+            $newServerList | Add-Member -MemberType NoteProperty -Name $newServerName -Value $updatedConfig
+            $config.ServerList = $newServerList
+        } else {
+            # 如果服务器名称未改变，直接更新配置
+            $config.ServerList.$serverName = $updatedConfig
         }
 
         # 保存配置
         $config | ConvertTo-Json -Depth 10 | Set-Content -Path $configPath
 
-        Write-Host "服务器 '$serverName' 已成功修改!" -ForegroundColor Green
+        Write-Host "服务器配置已成功修改!" -ForegroundColor Green
         Read-Host "按任意键返回主菜单"
         Show-MainMenu
     }
@@ -406,6 +436,11 @@ function Update-Servers {
         # 执行 SteamCMD
         Write-Host "开始更新服务器..." -ForegroundColor Yellow
         try {
+            $steamCmdArgs = $steamCmdArgs -join " "
+            if ($DebugMode) {
+                Write-Host "调试信息 - SteamCMD 完整命令:" -ForegroundColor Yellow
+                Write-Host "$steamCmdExe $steamCmdArgs" -ForegroundColor Gray
+            }
             $process = Start-Process -FilePath $steamCmdExe -ArgumentList $steamCmdArgs -NoNewWindow -Wait -PassThru
             if ($process.ExitCode -eq 0) {
                 Write-Host "服务器更新成功完成！" -ForegroundColor Green
