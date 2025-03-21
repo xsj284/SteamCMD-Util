@@ -1,0 +1,176 @@
+{
+    "LanguageList": ["zh-CN", "en-US"],
+    "LanguageName": ["简体中文", "English"],
+    "HELLO_WORLD": ["你好，世界！", "Hello, World!"],
+    "LANGUAGE_SETTINGS": ["语言设置", "Language Settings"],
+    "SELECT_LANGUAGE": ["请选择语言", "Please select language"],
+    "GAME_SERVER_TOOL": ["游戏服务器管理工具", "Game Server Management Tool"],
+    "UPDATE_SERVER": ["更新服务器", "Update Server"],
+    "ADD_NEW_SERVER": ["添加新服务器", "Add New Server"],
+    "MODIFY_SERVER": ["修改服务器", "Modify Server"],
+    "DELETE_SERVER": ["删除服务器", "Delete Server"],
+    "EXIT": ["退出", "Exit"],
+    "SELECT_OPERATION": ["请选择操作", "Please select operation"],
+    "INVALID_CHOICE": [
+        "无效的选择，请重试",
+        "Invalid choice, please try again"
+    ],
+    "ENTER_SERVER_NAME": [
+        "请输入服务器名称 (例如: PZServer)",
+        "Please enter server name (e.g. PZServer)"
+    ],
+    "SERVER_NAME_EXISTS": [
+        "错误: 服务器名称 '{0}' 已存在!",
+        "Error: Server name '{0}' already exists!"
+    ],
+    "PRESS_ENTER_RETURN": [
+        "按Enter键返回主菜单",
+        "Press Enter to return to main menu"
+    ],
+    "ENTER_STEAM_APPID": ["请输入Steam AppID", "Please enter Steam AppID"],
+    "ENTER_SERVER_DESCRIPTION": [
+        "请输入服务器描述",
+        "Please enter server description"
+    ],
+    "ENTER_INSTALL_DIR": [
+        "请输入安装目录 (相对于脚本目录，例如: ./PZServer)",
+        "Please enter installation directory (relative to script dir, e.g. ./PZServer)"
+    ],
+    "USE_ANONYMOUS_LOGIN": [
+        "是否使用匿名登录? (Y/N)",
+        "Use anonymous login? (Y/N)"
+    ],
+    "SERVER_ADDED": [
+        "服务器 '{0}' 已成功添加!",
+        "Server '{0}' has been successfully added!"
+    ],
+    "AVAILABLE_SERVERS": ["可用的服务器列表:", "Available server list:"],
+    "NO_SERVERS_CONFIGURED": [
+        "当前没有配置任何服务器",
+        "No servers are currently configured"
+    ],
+    "RETURN_MAIN_MENU": ["返回主菜单", "Return to main menu"],
+    "EXIT_PROGRAM": ["退出程序", "Exit program"],
+    "ENTER_SERVER_NUMBER": [
+        "请输入要{0}的服务器编号 (1-{1}, B 返回, Q 退出)",
+        "Please enter the server number to {0} (1-{1}, B return, Q exit)"
+    ],
+    "CURRENT_CONFIG": ["当前配置:", "Current configuration:"],
+    "WARNING": ["警告!", "Warning!"],
+    "DELETE_SERVER_WARNING": ["删除服务器将会:", "Deleting the server will:"],
+    "REMOVE_SERVER_INFO": [
+        "1. 从配置文件中移除服务器信息",
+        "1. Remove server information from configuration file"
+    ],
+    "DELETE_SERVER_DIR": [
+        "2. 永久删除服务器安装目录及其中的所有文件",
+        "2. Permanently delete server installation directory and all files within"
+    ],
+    "OPERATION_IRREVERSIBLE": [
+        "此操作不可逆，请确保您已备份重要数据!",
+        "This operation is irreversible, please ensure you have backed up important data!"
+    ],
+    "ENTER_SERVER_NAME_CONFIRM": [
+        "请输入服务器名称 '{0}' 以确认删除，或输入任意其他内容取消",
+        "Please enter server name '{0}' to confirm deletion, or enter anything else to cancel"
+    ],
+    "DELETING_INSTALL_DIR": [
+        "正在删除安装目录: {0}",
+        "Deleting installation directory: {0}"
+    ],
+    "INSTALL_DIR_DELETED": [
+        "安装目录已成功删除",
+        "Installation directory successfully deleted"
+    ],
+    "ERROR_DELETING_DIR": [
+        "删除安装目录时出错",
+        "Error deleting installation directory"
+    ],
+    "INSTALL_DIR_NOT_EXIST": [
+        "安装目录不存在: {0}",
+        "Installation directory does not exist: {0}"
+    ],
+    "SERVER_DELETED": [
+        "服务器 '{0}' 已成功删除!",
+        "Server '{0}' has been successfully deleted!"
+    ],
+    "DELETE_CANCELED": ["删除操作已取消", "Delete operation cancelled"],
+    "ENTER_NEW_SERVER_NAME": [
+        "请输入新的服务器名称 (留空保持不变)",
+        "Please enter new server name (leave empty to keep unchanged)"
+    ],
+    "ENTER_NEW_APPID": [
+        "请输入新的Steam AppID (留空保持不变)",
+        "Please enter new Steam AppID (leave empty to keep unchanged)"
+    ],
+    "ENTER_NEW_DESCRIPTION": [
+        "请输入新的服务器描述 (留空保持不变)",
+        "Please enter new server description (leave empty to keep unchanged)"
+    ],
+    "ENTER_NEW_INSTALL_DIR": [
+        "请输入新的安装目录 (留空保持不变)",
+        "Please enter new installation directory (leave empty to keep unchanged)"
+    ],
+    "CHANGE_LOGIN_METHOD": [
+        "是否修改登录方式? (Y/N)",
+        "Change login method? (Y/N)"
+    ],
+    "UPDATE_ALL_SERVERS": ["更新所有服务器", "Update all servers"],
+    "PROCESSING_SERVER": ["正在处理服务器: {0}", "Processing server: {0}"],
+    "ENTER_STEAM_USERNAME": [
+        "请输入Steam用户名",
+        "Please enter Steam username"
+    ],
+    "ENTER_STEAM_PASSWORD": ["请输入Steam密码", "Please enter Steam password"],
+    "START_UPDATING_SERVER": ["开始更新服务器...", "Starting server update..."],
+    "DEBUG_STEAMCMD_COMMAND": [
+        "调试信息 - SteamCMD完整命令:",
+        "Debug info - SteamCMD full command:"
+    ],
+    "SERVER_UPDATE_SUCCESS": [
+        "服务器更新成功完成！",
+        "Server update completed successfully!"
+    ],
+    "SERVER_UPDATE_ERROR": [
+        "服务器更新过程中出现错误，退出代码: {0}",
+        "Error during server update, exit code: {0}"
+    ],
+    "SERVER_UPDATED": [
+        "服务器 '{0}' 更新完成！",
+        "Server '{0}' update completed!"
+    ],
+    "ALL_SERVERS_UPDATED": [
+        "所有选定的服务器更新完成！",
+        "All selected servers update completed!"
+    ],
+    "CONFIG_FILE_NOT_EXIST": [
+        "配置文件不存在，正在创建默认配置文件: {0}",
+        "Configuration file does not exist, creating default configuration file: {0}"
+    ],
+    "CONFIG_FILE_CREATED": [
+        "已创建默认配置文件",
+        "Default configuration file created"
+    ],
+    "STEAMCMD_NOT_EXIST": [
+        "SteamCMD不存在，正在自动下载...",
+        "SteamCMD does not exist, downloading automatically..."
+    ],
+    "DOWNLOADING_STEAMCMD": ["下载SteamCMD...", "Downloading SteamCMD..."],
+    "STEAMCMD_DOWNLOAD_ERROR": [
+        "下载或解压SteamCMD时发生错误",
+        "Error downloading or extracting SteamCMD"
+    ],
+    "STEAMCMD_INSTALL_COMPLETE": [
+        "SteamCMD安装完成！",
+        "SteamCMD installation complete!"
+    ],
+    "JQ_MISSING_WARNING": [
+        "警告: 未找到jq工具，此工具用于处理JSON格式的配置文件",
+        "Warning: jq tool not found, this tool is used to process JSON format configuration files"
+    ],
+    "JQ_INSTALL_INSTRUCTIONS": [
+        "您可以通过以下命令安装:",
+        "You can install it with the following commands:"
+    ],
+    "CONTINUE_QUESTION": ["是否继续? (y/n)", "Continue? (y/n)"]
+}

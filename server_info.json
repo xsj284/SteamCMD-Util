@@ -1,10 +1,11 @@
 {
   "SteamCMD_Path": "./SteamCMD",
+  "Language": "en-US",
   "ServerList": {
     "PZServer": {
       "AppId": "380870",
       "Description": "僵尸毁灭工程服务器",
-      "ForceInstallDir": "./PZServer",
+      "ForceInstallDir": "../PZServer",
       "Anonymous": true
     }
   }

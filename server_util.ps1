@@ -13,6 +13,7 @@ if (-not (Test-Path $configPath)) {
     # 创建默认配置文件
     $defaultConfig = @{
         SteamCMD_Path = "./SteamCMD"
+        Language      = "zh-CN"
         ServerList    = @{}
     }
     $defaultConfig | ConvertTo-Json -Depth 10 | Set-Content -Path $configPath
@@ -21,12 +22,91 @@ if (-not (Test-Path $configPath)) {
 
 $config = Get-Content $configPath | ConvertFrom-Json
 
+# 读取并解析本地化文件
+$localeFilePath = Join-Path $PSScriptRoot "locale.json"
+$localeData = Get-Content $localeFilePath -Raw | ConvertFrom-Json
+# 从配置中读取语言设置
+$CurrentLanguage = if ($config.Language) { $config.Language } else { "zh-CN" }
+
+# 获取本地化文本
+function Get-LocalizedText {
+    param (
+        [string]$Key,
+        [string[]]$Params = @()
+    )
+
+    # 获取语言列表并找出当前语言的索引
+    $langList = $localeData.LanguageList
+    $langIndex = $langList.IndexOf($CurrentLanguage)
+
+    # 如果找不到当前语言，默认使用第一个语言
+    if ($langIndex -eq -1) {
+        $langIndex = 0
+    }
+
+    # 获取对应的文本数组并返回对应索引的文本
+    $textArray = $localeData.$Key
+    $text = $textArray[$langIndex]
+
+    # 替换参数
+    for ($i = 0; $i -lt $Params.Length; $i++) {
+        $text = $text -replace "\{$i\}", $Params[$i]
+    }
+    return $text
+}
+
+# 保存语言设置到配置文件
+function Save-LanguageSetting {
+    param (
+        [string]$Language
+    )
+
+    $config.Language = $Language
+    $config | ConvertTo-Json -Depth 10 | Set-Content -Path $configPath
+}
+
+# 语言选择功能
+function Select-Language {
+    Clear-Host
+    Write-Host (Get-LocalizedText "LANGUAGE_SETTINGS") -ForegroundColor Cyan
+
+    # 获取语言列表
+    $langList = $localeData.LanguageList
+    $langNameList = $localeData.LanguageName
+
+    # 显示所有可用语言
+    for ($i = 0; $i -lt $langList.Count; $i++) {
+        Write-Host "$($i+1). $($langNameList[$i])"
+    }
+
+    $choice = Read-Host (Get-LocalizedText "SELECT_LANGUAGE")
+
+    # 处理用户选择
+    if ([int]::TryParse($choice, [ref]$null)) {
+        $index = [int]$choice - 1
+        if ($index -ge 0 -and $index -lt $langList.Count) {
+            $script:CurrentLanguage = $langList[$index]
+            Save-LanguageSetting -Language $langList[$index]
+        }
+        else {
+            # 默认使用第一个语言
+            $script:CurrentLanguage = $langList[0]
+            Save-LanguageSetting -Language $langList[0]
+        }
+    }
+    else {
+        # 默认使用第一个语言
+        $script:CurrentLanguage = $langList[0]
+        Save-LanguageSetting -Language $langList[0]
+    }
+}
+
 # 检查 SteamCMD 路径
 $steamCmdPath = Join-Path $PSScriptRoot $config.SteamCMD_Path
 $steamCmdExe = Join-Path $steamCmdPath "steamcmd.exe"
 
 if (-not (Test-Path $steamCmdExe)) {
-    Write-Host "SteamCMD 不存在，正在自动下载..." -ForegroundColor Yellow
+    Write-Host (Get-LocalizedText "STEAMCMD_NOT_EXIST") -ForegroundColor Yellow
 
     # 创建 SteamCMD 目录
     New-Item -ItemType Directory -Force -Path $steamCmdPath | Out-Null
@@ -40,16 +120,16 @@ if (-not (Test-Path $steamCmdExe)) {
         Invoke-WebRequest -Uri $downloadUrl -OutFile $steamCmdZip
 
         # 解压 SteamCMD
-        Write-Host "正在解压 SteamCMD..." -ForegroundColor Yellow
+        Write-Host (Get-LocalizedText "DOWNLOADING_STEAMCMD") -ForegroundColor Yellow
         Expand-Archive -Path $steamCmdZip -DestinationPath $steamCmdPath -Force
 
         # 清理下载的压缩包
         Remove-Item $steamCmdZip -Force
 
-        Write-Host "SteamCMD 安装完成！" -ForegroundColor Green
+        Write-Host (Get-LocalizedText "STEAMCMD_INSTALL_COMPLETE") -ForegroundColor Green
     }
     catch {
-        Write-Error "下载或解压 SteamCMD 时发生错误: $_"
+        Write-Error (Get-LocalizedText "STEAMCMD_DOWNLOAD_ERROR")
         exit 1
     }
 }
@@ -57,25 +137,27 @@ if (-not (Test-Path $steamCmdExe)) {
 # 显示主菜单
 function Show-MainMenu {
     Clear-Host
-    Write-Host "===== 游戏服务器管理工具 =====" -ForegroundColor Cyan
-    Write-Host "1. 更新服务器" -ForegroundColor White
-    Write-Host "2. 添加新服务器" -ForegroundColor White
-    Write-Host "3. 修改服务器" -ForegroundColor White
-    Write-Host "4. 删除服务器" -ForegroundColor White
-    Write-Host "Q. 退出" -ForegroundColor White
+    Write-Host "===== $(Get-LocalizedText "GAME_SERVER_TOOL") =====" -ForegroundColor Cyan
+    Write-Host "1. $(Get-LocalizedText "UPDATE_SERVER")" -ForegroundColor White
+    Write-Host "2. $(Get-LocalizedText "ADD_NEW_SERVER")" -ForegroundColor White
+    Write-Host "3. $(Get-LocalizedText "MODIFY_SERVER")" -ForegroundColor White
+    Write-Host "4. $(Get-LocalizedText "DELETE_SERVER")" -ForegroundColor White
+    Write-Host "5. $(Get-LocalizedText "LANGUAGE_SETTINGS")" -ForegroundColor White
+    Write-Host "Q. $(Get-LocalizedText "EXIT")" -ForegroundColor White
     Write-Host "=============================" -ForegroundColor Cyan
 
-    $choice = Read-Host "请选择操作"
+    $choice = Read-Host (Get-LocalizedText "SELECT_OPERATION")
 
     switch ($choice) {
         "1" { Update-Servers }
         "2" { Add-NewServer }
         "3" { Update-Server }
         "4" { Remove-Server }
+        "5" { Select-Language; Show-MainMenu }
         "Q" { exit }
         "q" { exit }
         default {
-            Write-Host "无效的选择，请重试" -ForegroundColor Red
+            Write-Host (Get-LocalizedText "INVALID_CHOICE") -ForegroundColor Red
             Start-Sleep -Seconds 2
             Show-MainMenu
         }
@@ -85,24 +167,24 @@ function Show-MainMenu {
 # 添加新服务器功能
 function Add-NewServer {
     Clear-Host
-    Write-Host "===== 添加新服务器 =====" -ForegroundColor Cyan
+    Write-Host "===== $(Get-LocalizedText "ADD_NEW_SERVER") =====" -ForegroundColor Cyan
 
-    $serverName = Read-Host "请输入服务器名称 (例如: PZServer)"
+    $serverName = Read-Host (Get-LocalizedText "ENTER_SERVER_NAME")
 
     # 检查服务器名称是否已存在
     if ($config.ServerList.PSObject.Properties.Name -contains $serverName) {
-        Write-Host "错误: 服务器名称 '$serverName' 已存在!" -ForegroundColor Red
-        Read-Host "按任意键返回主菜单"
+        Write-Host (Get-LocalizedText "SERVER_NAME_EXISTS" -Params @($serverName)) -ForegroundColor Red
+        Read-Host (Get-LocalizedText "PRESS_ENTER_RETURN")
         Show-MainMenu
         return
     }
 
-    $appId = Read-Host "请输入 Steam AppID"
-    $description = Read-Host "请输入服务器描述"
-    $installDir = Read-Host "请输入安装目录 (相对于脚本目录，例如: ./PZServer)"
+    $appId = Read-Host (Get-LocalizedText "ENTER_STEAM_APPID")
+    $description = Read-Host (Get-LocalizedText "ENTER_SERVER_DESCRIPTION")
+    $installDir = Read-Host (Get-LocalizedText "ENTER_INSTALL_DIR")
 
     $anonymous = $false
-    $anonymousChoice = Read-Host "是否使用匿名登录? (Y/N)"
+    $anonymousChoice = Read-Host (Get-LocalizedText "USE_ANONYMOUS_LOGIN")
     if ($anonymousChoice -eq "Y" -or $anonymousChoice -eq "y") {
         $anonymous = $true
     }
@@ -127,8 +209,8 @@ function Add-NewServer {
     # 保存配置
     $config | ConvertTo-Json -Depth 10 | Set-Content -Path $configPath
 
-    Write-Host "服务器 '$serverName' 已成功添加!" -ForegroundColor Green
-    Read-Host "按任意键返回主菜单"
+    Write-Host (Get-LocalizedText "SERVER_ADDED" -Params @($serverName)) -ForegroundColor Green
+    Read-Host (Get-LocalizedText "PRESS_ENTER_RETURN")
     Show-MainMenu
 }
 
@@ -138,7 +220,7 @@ function Remove-Server {
     # 显示服务器列表并让用户选择
     $serverList = @()
     $index = 1
-    Write-Host "`n可用的服务器列表:" -ForegroundColor Cyan
+    Write-Host "`n$(Get-LocalizedText "AVAILABLE_SERVERS")" -ForegroundColor Cyan
     foreach ($server in $config.ServerList.PSObject.Properties) {
         $serverName = $server.Name
         $serverConfig = $server.Value
@@ -153,15 +235,15 @@ function Remove-Server {
     }
 
     if ($serverList.Count -eq 0) {
-        Write-Host "`n当前没有配置任何服务器" -ForegroundColor Yellow
-        Read-Host "按任意键返回主菜单"
+        Write-Host "`n$(Get-LocalizedText "NO_SERVERS_CONFIGURED")" -ForegroundColor Yellow
+        Read-Host (Get-LocalizedText "PRESS_ENTER_RETURN")
         Show-MainMenu
         return
     }
 
-    Write-Host "B. 返回主菜单" -ForegroundColor Yellow
-    Write-Host "Q. 退出程序" -ForegroundColor Yellow
-    $choice = Read-Host "`n请输入要删除的服务器编号 (1-$($serverList.Count), B 返回, Q 退出)"
+    Write-Host "B. $(Get-LocalizedText "RETURN_MAIN_MENU")" -ForegroundColor Yellow
+    Write-Host "Q. $(Get-LocalizedText "EXIT_PROGRAM")" -ForegroundColor Yellow
+    $choice = Read-Host "`n$(Get-LocalizedText "ENTER_SERVER_NUMBER" -Params @("删除", $serverList.Count))"
 
     if ($choice -eq "B" -or $choice -eq "b") {
         Show-MainMenu
@@ -180,63 +262,55 @@ function Remove-Server {
         $installDir = Join-Path $PSScriptRoot $serverConfig.ForceInstallDir
 
         Clear-Host
-        Write-Host "===== 删除服务器: $serverName =====" -ForegroundColor Cyan
-        Write-Host "当前配置:" -ForegroundColor Yellow
+        Write-Host "===== $(Get-LocalizedText "DELETE_SERVER"): $serverName =====" -ForegroundColor Cyan
+        Write-Host "$(Get-LocalizedText "CURRENT_CONFIG"):" -ForegroundColor Yellow
         Write-Host "AppID: $($serverConfig.AppId)" -ForegroundColor White
-        Write-Host "描述: $($serverConfig.Description)" -ForegroundColor White
-        Write-Host "安装目录: $($serverConfig.ForceInstallDir)" -ForegroundColor White
-        Write-Host "安装路径: $installDir" -ForegroundColor White
+        Write-Host "$(Get-LocalizedText "ENTER_SERVER_DESCRIPTION"): $($serverConfig.Description)" -ForegroundColor White
+        Write-Host "$(Get-LocalizedText "ENTER_INSTALL_DIR"): $($serverConfig.ForceInstallDir)" -ForegroundColor White
+        Write-Host "$(Get-LocalizedText "ENTER_INSTALL_DIR"): $installDir" -ForegroundColor White
         Write-Host "=============================" -ForegroundColor Cyan
 
         # 显示风险警告
-        Write-Host "`n警告!" -ForegroundColor Red -BackgroundColor Yellow
-        Write-Host "删除服务器将会:" -ForegroundColor Red
-        Write-Host "1. 从配置文件中移除服务器信息" -ForegroundColor Red
-        Write-Host "2. 永久删除服务器安装目录及其中的所有文件" -ForegroundColor Red
-        Write-Host "此操作不可逆，请确保您已备份重要数据!" -ForegroundColor Red
+        Write-Host "`n$(Get-LocalizedText "WARNING")" -ForegroundColor Red -BackgroundColor Yellow
+        Write-Host "$(Get-LocalizedText "DELETE_SERVER_WARNING")" -ForegroundColor Red
+        Write-Host "$(Get-LocalizedText "REMOVE_SERVER_INFO")" -ForegroundColor Red
+        Write-Host "$(Get-LocalizedText "DELETE_SERVER_DIR")" -ForegroundColor Red
+        Write-Host "$(Get-LocalizedText "OPERATION_IRREVERSIBLE")" -ForegroundColor Red
 
         # 要求用户确认
-        $confirmation = Read-Host "`n请输入服务器名称 '$serverName' 以确认删除，或输入任意其他内容取消"
+        $confirmation = Read-Host "`n$(Get-LocalizedText "ENTER_SERVER_NAME_CONFIRM" -Params @($serverName))"
 
         if ($confirmation -eq $serverName) {
             # 删除安装目录
             if (Test-Path $installDir) {
-                Write-Host "`n正在删除安装目录: $installDir" -ForegroundColor Yellow
+                Write-Host "`n$(Get-LocalizedText "DELETING_INSTALL_DIR" -Params @($installDir))" -ForegroundColor Yellow
                 try {
-                    Remove-Item -Path $installDir -Recurse -Force -ErrorAction Stop
-                    Write-Host "安装目录已成功删除" -ForegroundColor Green
+                    Remove-Item -Path $installDir -Recurse -Force
+                    Write-Host "$(Get-LocalizedText "INSTALL_DIR_DELETED")" -ForegroundColor Green
                 }
                 catch {
-                    Write-Host "删除安装目录时出错: $_" -ForegroundColor Red
+                    Write-Host "$(Get-LocalizedText "ERROR_DELETING_DIR")" -ForegroundColor Red
                 }
             }
             else {
-                Write-Host "`n安装目录不存在: $installDir" -ForegroundColor Yellow
+                Write-Host "`n$(Get-LocalizedText "INSTALL_DIR_NOT_EXIST" -Params @($installDir))" -ForegroundColor Yellow
             }
 
             # 从配置中移除服务器
-            $newServerList = New-Object PSObject
-            foreach ($server in $config.ServerList.PSObject.Properties) {
-                if ($server.Name -ne $serverName) {
-                    $newServerList | Add-Member -MemberType NoteProperty -Name $server.Name -Value $server.Value
-                }
-            }
-            $config.ServerList = $newServerList
-
-            # 保存配置
+            $config.PSObject.Properties.Remove($serverName)
             $config | ConvertTo-Json -Depth 10 | Set-Content -Path $configPath
 
-            Write-Host "`n服务器 '$serverName' 已成功删除!" -ForegroundColor Green
+            Write-Host "`n$(Get-LocalizedText "SERVER_DELETED" -Params @($serverName))" -ForegroundColor Green
         }
         else {
-            Write-Host "`n删除操作已取消" -ForegroundColor Yellow
+            Write-Host "`n$(Get-LocalizedText "DELETE_CANCELED")" -ForegroundColor Yellow
         }
 
-        Read-Host "按任意键返回主菜单"
+        Read-Host (Get-LocalizedText "PRESS_ENTER_RETURN")
         Show-MainMenu
     }
     else {
-        Write-Error "无效的选择: $choice"
+        Write-Host (Get-LocalizedText "INVALID_CHOICE") -ForegroundColor Red
         Start-Sleep -Seconds 2
         Remove-Server
         return
@@ -249,7 +323,7 @@ function Update-Server {
     # 显示服务器列表并让用户选择
     $serverList = @()
     $index = 1
-    Write-Host "`n可用的服务器列表:" -ForegroundColor Cyan
+    Write-Host "`n$(Get-LocalizedText "AVAILABLE_SERVERS")" -ForegroundColor Cyan
     foreach ($server in $config.ServerList.PSObject.Properties) {
         $serverName = $server.Name
         $serverConfig = $server.Value
@@ -263,9 +337,16 @@ function Update-Server {
         $index++
     }
 
-    Write-Host "B. 返回主菜单" -ForegroundColor Yellow
-    Write-Host "Q. 退出程序" -ForegroundColor Yellow
-    $choice = Read-Host "`n请输入要修改的服务器编号 (1-$($serverList.Count), B 返回, Q 退出)"
+    if ($serverList.Count -eq 0) {
+        Write-Host "`n$(Get-LocalizedText "NO_SERVERS_CONFIGURED")" -ForegroundColor Yellow
+        Read-Host (Get-LocalizedText "PRESS_ENTER_RETURN")
+        Show-MainMenu
+        return
+    }
+
+    Write-Host "B. $(Get-LocalizedText "RETURN_MAIN_MENU")" -ForegroundColor Yellow
+    Write-Host "Q. $(Get-LocalizedText "EXIT_PROGRAM")" -ForegroundColor Yellow
+    $choice = Read-Host "`n$(Get-LocalizedText "ENTER_SERVER_NUMBER" -Params @("修改", $serverList.Count))"
 
     if ($choice -eq "B" -or $choice -eq "b") {
         Show-MainMenu
@@ -283,70 +364,66 @@ function Update-Server {
         $serverConfig = $selectedServer.Config
 
         Clear-Host
-        Write-Host "===== 修改服务器: $serverName =====" -ForegroundColor Cyan
-        Write-Host "当前配置:" -ForegroundColor Yellow
+        Write-Host "===== $(Get-LocalizedText "MODIFY_SERVER"): $serverName =====" -ForegroundColor Cyan
+        Write-Host "$(Get-LocalizedText "CURRENT_CONFIG"):" -ForegroundColor Yellow
         Write-Host "AppID: $($serverConfig.AppId)" -ForegroundColor White
-        Write-Host "描述: $($serverConfig.Description)" -ForegroundColor White
-        Write-Host "安装目录: $($serverConfig.ForceInstallDir)" -ForegroundColor White
-        Write-Host "匿名登录: $($serverConfig.Anonymous)" -ForegroundColor White
+        Write-Host "$(Get-LocalizedText "ENTER_SERVER_DESCRIPTION"): $($serverConfig.Description)" -ForegroundColor White
+        Write-Host "$(Get-LocalizedText "ENTER_INSTALL_DIR"): $($serverConfig.ForceInstallDir)" -ForegroundColor White
+        Write-Host "$(Get-LocalizedText "USE_ANONYMOUS_LOGIN"): $($serverConfig.Anonymous)" -ForegroundColor White
         Write-Host "=============================" -ForegroundColor Cyan
 
         # 修改服务器名称
-        $newServerName = Read-Host "请输入新的服务器名称 (留空保持不变)"
+        $newServerName = Read-Host (Get-LocalizedText "ENTER_NEW_SERVER_NAME")
         if (-not [string]::IsNullOrWhiteSpace($newServerName)) {
             # 检查新名称是否已存在
             if ($newServerName -ne $serverName -and $config.ServerList.PSObject.Properties.Name -contains $newServerName) {
-                Write-Host "错误: 服务器名称 '$newServerName' 已存在!" -ForegroundColor Red
-                Read-Host "按任意键返回主菜单"
+                Write-Host (Get-LocalizedText "SERVER_NAME_EXISTS" -Params @($newServerName)) -ForegroundColor Red
+                Read-Host (Get-LocalizedText "PRESS_ENTER_RETURN")
                 Show-MainMenu
                 return
             }
         }
 
         # 修改其他配置
-        $newAppId = Read-Host "请输入新的 Steam AppID (留空保持不变)"
-        $newDescription = Read-Host "请输入新的服务器描述 (留空保持不变)"
-        $newInstallDir = Read-Host "请输入新的安装目录 (留空保持不变)"
-        $changeLoginMethod = Read-Host "是否修改登录方式? (Y/N)"
+        $newAppId = Read-Host (Get-LocalizedText "ENTER_NEW_APPID")
+        $newDescription = Read-Host (Get-LocalizedText "ENTER_NEW_DESCRIPTION")
+        $newInstallDir = Read-Host (Get-LocalizedText "ENTER_NEW_INSTALL_DIR")
+        $changeLoginMethod = Read-Host (Get-LocalizedText "CHANGE_LOGIN_METHOD")
 
         # 创建新的配置对象
-        $updatedConfig = @{
+        $updatedServer = @{
             AppId           = if (-not [string]::IsNullOrWhiteSpace($newAppId)) { $newAppId } else { $serverConfig.AppId }
             Description     = if (-not [string]::IsNullOrWhiteSpace($newDescription)) { $newDescription } else { $serverConfig.Description }
             ForceInstallDir = if (-not [string]::IsNullOrWhiteSpace($newInstallDir)) { $newInstallDir } else { $serverConfig.ForceInstallDir }
             Anonymous       = $serverConfig.Anonymous
         }
 
+        # 处理登录方式变更
         if ($changeLoginMethod -eq "Y" -or $changeLoginMethod -eq "y") {
-            $anonymousChoice = Read-Host "是否使用匿名登录? (Y/N)"
-            $updatedConfig.Anonymous = ($anonymousChoice -eq "Y" -or $anonymousChoice -eq "y")
+            $updatedServer.Anonymous = -not $serverConfig.Anonymous
         }
 
-        # 更新配置
-        if (-not [string]::IsNullOrWhiteSpace($newServerName) -and $newServerName -ne $serverName) {
-            # 如果服务器名称改变，删除旧配置并添加新配置
-            $newServerList = New-Object PSObject
-            foreach ($server in $config.ServerList.PSObject.Properties) {
-                if ($server.Name -ne $serverName) {
-                    $newServerList | Add-Member -MemberType NoteProperty -Name $server.Name -Value $server.Value
-                }
-            }
-            $newServerList | Add-Member -MemberType NoteProperty -Name $newServerName -Value $updatedConfig
-            $config.ServerList = $newServerList
-        } else {
-            # 如果服务器名称未改变，直接更新配置
-            $config.ServerList.$serverName = $updatedConfig
+        # 保存修改后的配置
+        if ([string]::IsNullOrWhiteSpace($newServerName) -or $newServerName -eq $serverName) {
+            # 更新现有服务器
+            $config.ServerList.PSObject.Properties.Remove($serverName)
+            $config.ServerList | Add-Member -MemberType NoteProperty -Name $serverName -Value $updatedServer
+        }
+        else {
+            # 创建新服务器并删除旧的
+            $config.ServerList.PSObject.Properties.Remove($serverName)
+            $config.ServerList | Add-Member -MemberType NoteProperty -Name $newServerName -Value $updatedServer
         }
 
-        # 保存配置
+        # 保存到配置文件
         $config | ConvertTo-Json -Depth 10 | Set-Content -Path $configPath
 
-        Write-Host "服务器配置已成功修改!" -ForegroundColor Green
-        Read-Host "按任意键返回主菜单"
+        Write-Host (Get-LocalizedText "SERVER_UPDATED" -Params @($serverName)) -ForegroundColor Green
+        Read-Host (Get-LocalizedText "PRESS_ENTER_RETURN")
         Show-MainMenu
     }
     else {
-        Write-Error "无效的选择: $choice"
+        Write-Host (Get-LocalizedText "INVALID_CHOICE") -ForegroundColor Red
         Start-Sleep -Seconds 2
         Update-Server
         return
@@ -359,7 +436,7 @@ function Update-Servers {
     # 显示服务器列表并让用户选择
     $serverList = @()
     $index = 1
-    Write-Host "`n可用的服务器列表:" -ForegroundColor Cyan
+    Write-Host "`n$(Get-LocalizedText "AVAILABLE_SERVERS")" -ForegroundColor Cyan
     foreach ($server in $config.ServerList.PSObject.Properties) {
         $serverName = $server.Name
         $serverConfig = $server.Value
@@ -373,10 +450,17 @@ function Update-Servers {
         $index++
     }
 
-    Write-Host "0. 更新所有服务器" -ForegroundColor Yellow
-    Write-Host "B. 返回主菜单" -ForegroundColor Yellow
-    Write-Host "Q. 退出程序" -ForegroundColor Yellow
-    $choice = Read-Host "`n请输入要更新的服务器编号 (0-$($serverList.Count), B 返回, Q 退出)"
+    if ($serverList.Count -eq 0) {
+        Write-Host "`n$(Get-LocalizedText "NO_SERVERS_CONFIGURED")" -ForegroundColor Yellow
+        Read-Host (Get-LocalizedText "PRESS_ENTER_RETURN")
+        Show-MainMenu
+        return
+    }
+
+    Write-Host "0. $(Get-LocalizedText "UPDATE_ALL_SERVERS")" -ForegroundColor Yellow
+    Write-Host "B. $(Get-LocalizedText "RETURN_MAIN_MENU")" -ForegroundColor Yellow
+    Write-Host "Q. $(Get-LocalizedText "EXIT_PROGRAM")" -ForegroundColor Yellow
+    $choice = Read-Host "`n$(Get-LocalizedText "ENTER_SERVER_NUMBER" -Params @("更新", $serverList.Count))"
 
     if ($choice -eq "B" -or $choice -eq "b") {
         Show-MainMenu
@@ -396,7 +480,7 @@ function Update-Servers {
         $serversToUpdate = @($serverList[[int]$choice - 1])
     }
     else {
-        Write-Error "无效的选择: $choice"
+        Write-Host (Get-LocalizedText "INVALID_CHOICE") -ForegroundColor Red
         Start-Sleep -Seconds 2
         Update-Servers
         return
@@ -407,7 +491,7 @@ function Update-Servers {
         $serverName = $server.Name
         $serverConfig = $server.Config
 
-        Write-Host "`n正在处理服务器: $serverName" -ForegroundColor Green
+        Write-Host "`n$(Get-LocalizedText "PROCESSING_SERVER" -Params @($serverName))" -ForegroundColor Green
 
         # 构建 SteamCMD 参数
         $steamCmdArgs = @("+force_install_dir `"$(Join-Path $PSScriptRoot $serverConfig.ForceInstallDir)`"")
@@ -418,8 +502,8 @@ function Update-Servers {
         }
         else {
             if ([string]::IsNullOrEmpty($serverConfig.Username)) {
-                $username = Read-Host "请输入 Steam 用户名"
-                $password = Read-Host "请输入 Steam 密码" -AsSecureString
+                $username = Read-Host (Get-LocalizedText "ENTER_STEAM_USERNAME")
+                $password = Read-Host (Get-LocalizedText "ENTER_STEAM_PASSWORD") -AsSecureString
                 $BSTR = [System.Runtime.InteropServices.Marshal]::SecureStringToBSTR($password)
                 $plainPassword = [System.Runtime.InteropServices.Marshal]::PtrToStringAuto($BSTR)
                 $steamCmdArgs += "+login `"$username`" `"$plainPassword`""
@@ -434,19 +518,19 @@ function Update-Servers {
         $steamCmdArgs += "+quit"
 
         # 执行 SteamCMD
-        Write-Host "开始更新服务器..." -ForegroundColor Yellow
+        Write-Host (Get-LocalizedText "START_UPDATING_SERVER") -ForegroundColor Yellow
         try {
             $steamCmdArgs = $steamCmdArgs -join " "
             if ($DebugMode) {
-                Write-Host "调试信息 - SteamCMD 完整命令:" -ForegroundColor Yellow
+                Write-Host (Get-LocalizedText "DEBUG_STEAMCMD_COMMAND") -ForegroundColor Yellow
                 Write-Host "$steamCmdExe $steamCmdArgs" -ForegroundColor Gray
             }
             $process = Start-Process -FilePath $steamCmdExe -ArgumentList $steamCmdArgs -NoNewWindow -Wait -PassThru
             if ($process.ExitCode -eq 0) {
-                Write-Host "服务器更新成功完成！" -ForegroundColor Green
+                Write-Host (Get-LocalizedText "SERVER_UPDATE_SUCCESS") -ForegroundColor Green
             }
             else {
-                Write-Host "服务器更新过程中出现错误，退出代码: $($process.ExitCode)" -ForegroundColor Red
+                Write-Host (Get-LocalizedText "SERVER_UPDATE_ERROR" -Params @($process.ExitCode)) -ForegroundColor Red
             }
         }
         catch {
@@ -455,13 +539,13 @@ function Update-Servers {
     }
 
     if ($serversToUpdate.Count -eq 1) {
-        Write-Host "`n服务器 '$($serversToUpdate[0].Name)' 更新完成！" -ForegroundColor Green
+        Write-Host "`n$(Get-LocalizedText "SERVER_UPDATED" -Params @($serversToUpdate[0].Name))" -ForegroundColor Green
     }
     else {
-        Write-Host "`n所有选定的服务器更新完成！" -ForegroundColor Green
+        Write-Host "`n$(Get-LocalizedText "ALL_SERVERS_UPDATED")" -ForegroundColor Green
     }
 
-    Read-Host "按任意键返回主菜单"
+    Read-Host (Get-LocalizedText "PRESS_ENTER_RETURN")
     Show-MainMenu
 }
 
