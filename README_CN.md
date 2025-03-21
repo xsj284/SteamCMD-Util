@@ -1,5 +1,7 @@
 # Steam游戏服务器管理工具
 
+简体中文 | [English](README.md)
+
 这是一个用于管理和更新基于Steam的游戏服务器的工具，支持Windows（PowerShell）和Linux（Bash）环境。
 
 ## 功能特点

@@ -1,5 +1,7 @@
 # Steam Game Server Management Tool
 
+[简体中文](README_CN.md) | English
+
 A tool for managing and updating Steam-based game servers, supporting both Windows (PowerShell) and Linux (Bash) environments.
 
 ## Features
