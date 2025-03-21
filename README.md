@@ -1,71 +1,74 @@
-# Steam游戏服务器管理工具
+# Steam Game Server Management Tool
 
-这是一个用于管理和更新基于Steam的游戏服务器的工具，支持Windows（PowerShell）和Linux（Bash）环境。
+A tool for managing and updating Steam-based game servers, supporting both Windows (PowerShell) and Linux (Bash) environments.
 
-## 功能特点
+## Features
 
-* 自动下载和安装SteamCMD
-* 管理多个游戏服务器
-* 支持服务器的批量更新
-* 支持匿名和账号登录Steam
-* 简单易用的交互式菜单
-* 调试模式支持
+* Automatic download and installation of SteamCMD
+* Management of multiple game servers
+* Batch server updates
+* Support for anonymous and account-based Steam login
+* User-friendly interactive menu
+* Debug mode support
+* Multi-language support (English, Simplified Chinese)
 
-## 系统要求
+## System Requirements
 
-### Windows版本
+### Windows Version
 
-* Windows操作系统
-* PowerShell 5.0或更高版本
-* 互联网连接
+* Windows operating system
+* PowerShell 5.0 or higher
+* Internet connection
 
-### Linux版本
+### Linux Version
 
-* Linux操作系统
+* Linux operating system
 * Bash shell
-* `jq` 命令行工具（用于JSON处理）
-* 互联网连接
+* `jq` command-line tool (for JSON processing)
+* Internet connection
 
-## 安装说明
+## Installation
 
-1. 克隆或下载此仓库到本地
-2. 确保有足够的磁盘空间用于安装游戏服务器
-3. 根据您的操作系统运行相应的脚本：
+1. Clone or download this repository to your local machine
+2. Ensure you have sufficient disk space for game server installation
+3. Run the appropriate script for your operating system:
     * Windows: `server_util.ps1`
     * Linux: `server_util.sh`
 
-脚本会自动下载并安装所需的SteamCMD。
+The script will automatically download and install the required SteamCMD.
 
-## 配置文件
+## Configuration File
 
-配置文件 `server_info.json` 用于存储服务器配置信息，结构如下：
+The configuration file `server_info.json` is used to store server configuration information with the following structure:
 
 ```json
 {
     "SteamCMD_Path": "SteamCMD",
+    "Language": "en-US",
     "ServerList": {
-        "服务器名称": {
-            "AppId": "Steam应用ID",
-            "Description": "服务器描述",
-            "ForceInstallDir": "安装目录",
+        "ServerName": {
+            "AppId": "SteamAppID",
+            "Description": "Server Description",
+            "ForceInstallDir": "Installation Directory",
             "Anonymous": true/false
         }
     }
 }
 ```
 
-### 配置项说明
+### Configuration Options
 
-* `SteamCMD_Path`: SteamCMD的安装路径（相对于脚本目录）
-* `ServerList`: 服务器列表，包含多个服务器配置
-  * `AppId`: Steam游戏的应用ID
-  * `Description`: 服务器的描述信息
-  * `ForceInstallDir`: 服务器安装目录（相对于脚本目录）
-  * `Anonymous`: 是否使用匿名登录（true/false）
+* `SteamCMD_Path`: SteamCMD installation path (relative to the script directory)
+* `Language`: Interface language (en-US for English, zh-CN for Simplified Chinese)
+* `ServerList`: List of servers, containing multiple server configurations
+  * `AppId`: Steam game application ID
+  * `Description`: Server description
+  * `ForceInstallDir`: Server installation directory (relative to the script directory)
+  * `Anonymous`: Whether to use anonymous login (true/false)
 
-## 使用说明
+## Usage Instructions
 
-### 启动工具
+### Starting the Tool
 
 #### Windows
 
@@ -79,111 +82,117 @@
 ./server_util.sh [-debug]
 ```
 
-使用 `-debug` 参数可以启用调试模式，显示SteamCMD的完整命令。
+Use the `-debug` parameter to enable debug mode, which displays the full SteamCMD commands.
 
-### 主要功能
+### Main Functions
 
-1. **更新服务器**
-    * 选择菜单选项"1"
-    * 可以选择更新单个服务器或所有服务器
-    * 支持匿名登录和账号登录
-    * 调试模式下会显示完整的SteamCMD命令
+1. **Update Server**
+    * Select menu option "1"
+    * Choose to update a single server or all servers
+    * Supports anonymous and account logins
+    * Debug mode shows the complete SteamCMD command
 
-2. **添加新服务器**
-    * 选择菜单选项"2"
-    * 输入服务器名称、Steam AppID、描述和安装目录
-    * 选择是否使用匿名登录
-    * 自动检查服务器名称是否重复
+2. **Add New Server**
+    * Select menu option "2"
+    * Enter server name, Steam AppID, description, and installation directory
+    * Choose whether to use anonymous login
+    * Automatically checks for duplicate server names
 
-3. **修改服务器配置**
-    * 选择菜单选项"3"
-    * 选择要修改的服务器
-    * 可以修改：
-        * 服务器名称
+3. **Modify Server Configuration**
+    * Select menu option "3"
+    * Choose the server to modify
+    * You can modify:
+        * Server name
         * AppID
-        * 描述
-        * 安装目录
-        * 登录方式
-    * 所有字段都可以选择保持不变
-    * 自动检查新服务器名称是否与现有名称冲突
+        * Description
+        * Installation directory
+        * Login method
+    * All fields can remain unchanged if desired
+    * Automatically checks if the new server name conflicts with existing ones
 
-4. **删除服务器**
-    * 选择菜单选项"4"
-    * 选择要删除的服务器
-    * 系统会要求确认删除操作
-    * 可选择是否同时删除服务器文件
-    * 注意：此操作不可逆，请确保已备份重要数据
+4. **Delete Server**
+    * Select menu option "4"
+    * Select the server to delete
+    * The system will ask you to confirm the deletion
+    * Option to simultaneously delete server files
+    * Note: This operation is irreversible, please ensure important data is backed up
 
-### 使用示例
+5. **Language Settings**
+    * Select menu option "5" (on the main menu)
+    * Choose your preferred language
+    * Currently supports English and Simplified Chinese
+    * Settings are saved and applied immediately
 
-1. **添加Project Zomboid服务器**
+### Usage Examples
+
+1. **Adding a Project Zomboid Server**
 
     ```text
-    服务器名称: PZServer
+    Server Name: PZServer
     Steam AppID: 380870
-    描述: Project Zomboid专用服务器
-    安装目录: ./PZServer
-    匿名登录: Y
+    Description: Project Zomboid Dedicated Server
+    Installation Directory: ./PZServer
+    Anonymous Login: Y
     ```
 
-2. **添加Valheim服务器**
+2. **Adding a Valheim Server**
 
     ```text
-    服务器名称: ValheimServer
+    Server Name: ValheimServer
     Steam AppID: 896660
-    描述: Valheim专用服务器
-    安装目录: ./ValheimServer
-    匿名登录: Y
+    Description: Valheim Dedicated Server
+    Installation Directory: ./ValheimServer
+    Anonymous Login: Y
     ```
 
-## 调试模式
+## Debug Mode
 
-使用 `-debug` 参数启动脚本可以启用调试模式，这将：
+Use the `-debug` parameter when starting the script to enable debug mode, which will:
 
-* 显示SteamCMD的完整命令行
-* 帮助排查更新失败的问题
-* 验证命令参数是否正确
+* Display the complete SteamCMD command line
+* Help troubleshoot update failures
+* Verify command parameters are correct
 
-示例：
+Example:
 
 ```bash
 ./server_util.sh -debug
 ```
 
-## 注意事项
+## Important Notes
 
-1. 确保有足够的磁盘空间用于安装游戏服务器
-2. 部分游戏服务器可能需要Steam账号登录
-3. 首次运行时会自动下载并安装SteamCMD
-4. 建议使用相对路径配置安装目录
-5. Linux版本需要安装 `jq` 工具
-6. 修改服务器名称时会自动检查是否存在重名
+1. Ensure you have sufficient disk space for game server installation
+2. Some game servers may require a Steam account login
+3. SteamCMD will be automatically downloaded and installed on first run
+4. It is recommended to use relative paths for installation directories
+5. The Linux version requires the `jq` tool to be installed
+6. When modifying server names, the system automatically checks for duplicates
 
-## 常见问题
+## Common Issues
 
-1. **SteamCMD下载失败**
-    * 检查网络连接
-    * 确保有足够的磁盘空间
-    * 尝试手动下载并解压到SteamCMD目录
+1. **SteamCMD Download Failure**
+    * Check your network connection
+    * Ensure you have sufficient disk space
+    * Try manually downloading and extracting to the SteamCMD directory
 
-2. **服务器更新失败**
-    * 使用 `-debug` 参数检查完整命令
-    * 检查Steam账号登录状态
-    * 确认AppID是否正确
-    * 检查磁盘空间是否充足
+2. **Server Update Failure**
+    * Use the `-debug` parameter to check the complete command
+    * Check Steam account login status
+    * Verify the AppID is correct
+    * Check if disk space is sufficient
 
-3. **Linux版本缺少jq**
+3. **Missing jq in Linux**
     * Debian/Ubuntu: `sudo apt-get install jq`
     * CentOS/RHEL: `sudo yum install jq`
     * Fedora: `sudo dnf install jq`
     * Arch Linux: `sudo pacman -S jq`
 
-## 技术支持
+## Technical Support
 
-如果遇到问题，请检查以下内容：
+If you encounter issues, please check the following:
 
-1. 确认系统要求是否满足
-2. 检查配置文件格式是否正确
-3. 确认网络连接是否正常
-4. 验证磁盘空间是否充足
-5. 使用调试模式检查命令是否正确
+1. Confirm system requirements are met
+2. Check if the configuration file format is correct
+3. Verify network connection is normal
+4. Validate sufficient disk space
+5. Use debug mode to check if commands are correct
